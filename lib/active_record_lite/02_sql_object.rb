@@ -1,7 +1,7 @@
 require_relative 'db_connection'
 require_relative '00_attr_accessor_object'
 require 'active_support/inflector'
-
+require 'debugger'
 class MassObject
   def self.parse_all(results)
     results.map do |r| #r is a hash "id" => "2"
@@ -39,7 +39,17 @@ class SQLObject < MassObject
   end
 
   def self.find(id)
-    # ...
+    results = DBConnection.execute(<<-SQL, id)
+    SELECT
+      #{table_name}.*
+    FROM
+      #{table_name}
+    WHERE
+      #{table_name}.id = ?
+    LIMIT
+      1
+    SQL
+    parse_all(results).first
   end
 
   def attributes
@@ -47,7 +57,16 @@ class SQLObject < MassObject
   end
 
   def insert
-    # ...
+    col_names = self.class.columns - [:id]
+    q_marks = Array.new(col_names.size, '?')
+
+    DBConnection.execute(<<-SQL, self.attribute_values)
+    INSERT INTO
+      #{self.class.table_name} (#{col_names.join(', ')})
+    VALUES
+      (#{q_marks.join(', ')})
+    SQL
+    self.id = DBConnection.last_insert_row_id
   end
 
   def initialize(attrs = {})
@@ -61,14 +80,25 @@ class SQLObject < MassObject
   end
 
   def save
-    # ...
-  end
+    id.nil? ? insert : update
+    end
 
   def update
-    # ...
+    sql_set = attributes.keys.map do |attr_name|
+      "#{attr_name} = ?"
+    end.join(', ')
+
+    DBConnection.execute(<<-SQL, attributes.values, self.id)
+    UPDATE
+      #{self.class.table_name}
+    SET
+      #{sql_set}
+    WHERE
+      id = ?
+    SQL
   end
 
   def attribute_values
-    # ...
+    attributes.values
   end
 end
