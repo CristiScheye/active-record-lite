@@ -1,28 +1,41 @@
 require_relative 'db_connection'
-require_relative '01_mass_object'
+require_relative '00_attr_accessor_object'
 require 'active_support/inflector'
 
 class MassObject
   def self.parse_all(results)
-    # ...
+    results.map do |r| #r is a hash "id" => "2"
+      self.new(r)
+    end
   end
 end
 
 class SQLObject < MassObject
   def self.columns
-    # ...
+    if !!@cols #only run this once
+      @cols
+    else
+      rows = DBConnection.execute2("SELECT * FROM #{table_name} LIMIT 1")
+      @cols = rows.first.map(&:to_sym)
+
+      @cols.each do |col|
+        define_method(col) { attributes[col] }
+        define_method("#{col}=".to_sym) { |val| attributes[col] = val }
+      end
+    end
   end
 
   def self.table_name=(table_name)
-    # ...
+    @table_name = table_name
   end
 
   def self.table_name
-    # ...
+    @table_name || self.to_s.underscore.pluralize
   end
 
   def self.all
-    # ...
+    results = DBConnection.execute("SELECT * FROM #{table_name}")
+    parse_all(results)
   end
 
   def self.find(id)
@@ -30,15 +43,21 @@ class SQLObject < MassObject
   end
 
   def attributes
-    # ...
+    @attributes ||= Hash.new
   end
 
   def insert
     # ...
   end
 
-  def initialize
-    # ...
+  def initialize(attrs = {})
+    attrs.each do |attr_name, attr_val|
+      if self.class.columns.include?(attr_name.to_sym)
+        self.send("#{attr_name}=", attr_val)
+      else
+        raise "unknown attribute #{attr_name}"
+      end
+    end
   end
 
   def save
