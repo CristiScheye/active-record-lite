@@ -64,7 +64,7 @@ class SQLObject < MassObject
     INSERT INTO
       #{self.class.table_name} (#{col_names.join(', ')})
     VALUES
-      (#{q_marks.join(', ')})
+    (#{q_marks.join(', ')})
     SQL
     self.id = DBConnection.last_insert_row_id
   end
