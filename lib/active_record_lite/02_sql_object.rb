@@ -41,11 +41,11 @@ class SQLObject < MassObject
   def self.find(id)
     results = DBConnection.execute(<<-SQL, id)
     SELECT
-      #{table_name}.*
+      "#{table_name}".*
     FROM
-      #{table_name}
+      "#{table_name}"
     WHERE
-      #{table_name}.id = ?
+      "#{table_name}".id = ?
     LIMIT
       1
     SQL
@@ -62,9 +62,9 @@ class SQLObject < MassObject
 
     DBConnection.execute(<<-SQL, self.attribute_values)
     INSERT INTO
-      #{self.class.table_name} (#{col_names.join(', ')})
+      "#{self.class.table_name}" ("#{col_names.join(', ')}")
     VALUES
-    (#{q_marks.join(', ')})
+      ("#{q_marks.join(', ')}")
     SQL
     self.id = DBConnection.last_insert_row_id
   end
@@ -81,7 +81,7 @@ class SQLObject < MassObject
 
   def save
     id.nil? ? insert : update
-    end
+  end
 
   def update
     sql_set = attributes.keys.map do |attr_name|
@@ -90,9 +90,9 @@ class SQLObject < MassObject
 
     DBConnection.execute(<<-SQL, attributes.values, self.id)
     UPDATE
-      #{self.class.table_name}
+      "#{self.class.table_name}"
     SET
-      #{sql_set}
+      "#{sql_set}"
     WHERE
       id = ?
     SQL

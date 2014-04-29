@@ -9,17 +9,16 @@ module Searchable
 
     DBConnection.execute(<<-SQL, params.values)
     SELECT
-    *
+      *
     FROM
-    #{self.table_name}
+      "#{self.table_name}"
     WHERE
-    #{attrs}
+      "#{attrs}"
     SQL
   end
 end
 
 class SQLObject
-  # Mixin Searchable here...
   extend Searchable
 
   def self.where(params)
