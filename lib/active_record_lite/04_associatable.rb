@@ -38,9 +38,9 @@ class HasManyOptions < AssocOptions
 end
 
 module Associatable
-  # Phase IVb
   def belongs_to(name, options = {})
     options = BelongsToOptions.new(name, options)
+    assoc_options[name.to_sym] = options
 
     define_method(name) do
       primary_id_to_find = self.send(options.foreign_key)
@@ -75,11 +75,10 @@ module Associatable
   end
 
   def assoc_options
-    # Wait to implement this in Phase V. Modify `belongs_to`, too.
+    @assoc_options ||= {}
   end
 end
 
 class SQLObject
   extend Associatable
-  # Mixin Associatable here...
 end
